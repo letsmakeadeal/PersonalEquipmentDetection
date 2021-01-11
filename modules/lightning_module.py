@@ -7,8 +7,8 @@ from torch.utils.data import DataLoader
 
 from utilities.common import collate_fn
 from utilities.builders import (build_lr_scheduler_from_cfg, build_optimizer_from_cfg, build_backbone_from_cfg,
-                            build_head_from_cfg, build_loss_from_cfg, build_transform_from_cfg,
-                            build_dataset_from_cfg, build_metric_from_cfg, build_loss_head_from_cfg)
+                                build_head_from_cfg, build_loss_from_cfg, build_transform_from_cfg,
+                                build_dataset_from_cfg, build_metric_from_cfg, build_loss_head_from_cfg)
 
 CfgT = Dict[str, Any]
 
