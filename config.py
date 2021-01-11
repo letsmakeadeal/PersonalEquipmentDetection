@@ -1,8 +1,8 @@
 seed = 42
 gpus = [0]
-batch_size = 1
+batch_size = 32
 epochs = 30
-num_workers = 1
+num_workers = 8
 
 train_dataset_len = 91756 // batch_size
 height = 320
@@ -83,7 +83,7 @@ train_dataset_cfg = dict(
     type='VWPPEDataset',
     path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
     is_train=True,
-    debug=True
+    debug=False
 )
 
 val_dataset_cfg = dict(

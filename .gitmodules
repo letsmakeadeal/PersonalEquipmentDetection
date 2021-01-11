@@ -2,6 +2,6 @@
 [submodule "third_party_repositories/ScaledYOLOv4"]
 	path = third_party_repositories/ScaledYOLOv4
 	url = https://github.com/WongKinYiu/ScaledYOLOv4
-[submodule "third_party_repositories/Object-Detection-Metrics"]
-	path = third_party_repositories/Object-Detection-Metrics
+[submodule "third_party_repositories/Object_Detection_Metrics"]
+	path = third_party_repositories/Object_Detection_Metrics
 	url = https://github.com/rafaelpadilla/Object-Detection-Metrics
