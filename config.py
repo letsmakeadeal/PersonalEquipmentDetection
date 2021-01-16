@@ -5,12 +5,13 @@ epochs = 30
 num_workers = 8
 
 train_dataset_len = 91756 // batch_size
-height = 320
-width = 544
+height = 640
+width = 1088
 classes = ['bare_head', 'helmet', 'ear_protection', 'welding_mask',
            'bare_chest', 'high_visibility_vest', 'person']
 num_classes = 7
 background_color = (0, 0, 0)
+divider = 32
 
 trainer_cfg = dict(
     gpus=gpus,
@@ -18,8 +19,8 @@ trainer_cfg = dict(
     callbacks=[
         dict(type='LearningRateMonitor', logging_interval='step'),
         dict(type='ModelCheckpoint', save_top_k=5, verbose=True, mode='max',
-             monitor='mAP_0.95', dirpath='./results/',
-             filename='{epoch:02d}_{rank_1:.2f}')
+             monitor='mAP_0.5', dirpath='./results/',
+             filename='{epoch:02d}_{AP:.4f}')
     ],
     benchmark=True,
     deterministic=True,
@@ -59,7 +60,10 @@ metric_cfgs = [
 
 train_transforms_cfg = dict(
     type='Compose', transforms=[
-        dict(type='Resize', width=width, height=height),
+        dict(type='LongestMaxSize', max_size=max(width, height)),
+        dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
+             value=(0, 0, 0), border_mode=0),
+        dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
         dict(type='RandomBrightnessContrast', brightness_limit=(-0.2, 0.2), contrast_limit=(-0.2, 0.2), p=0.5),
         dict(type='RGBShift', r_shift_limit=(10, 20), g_shift_limit=(10, 20), b_shift_limit=(10, 20), p=0.7),
         dict(type='OneOf', transforms=[
@@ -74,22 +78,25 @@ train_transforms_cfg = dict(
 
 val_transforms_cfg = dict(
     type='Compose', transforms=[
-        dict(type='Resize', width=width, height=height),
+        dict(type='LongestMaxSize', max_size=max(width, height)),
+        dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
+             value=(0, 0, 0), border_mode=0),
+        dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
         dict(type='Normalize', mean=(0., 0., 0.), std=(1., 1., 1.)),
         dict(type='ToTensorV2')
     ])
 
 train_dataset_cfg = dict(
     type='VWPPEDataset',
+    mode='virtual_train',
     path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-    is_train=True,
     debug=False
 )
 
 val_dataset_cfg = dict(
     type='VWPPEDataset',
+    mode='virtual_val',
     path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-    is_train=False,
     debug=False
 )
 
@@ -115,9 +122,8 @@ optimizer_cfg = dict(
 scheduler_cfg = dict(
     type='CyclicLR',
     base_lr=1e-6 * len(gpus),
-    max_lr=1e-4 * len(gpus),
-    step_size_up=int(train_dataset_len // batch_size * (epochs * 0.1)),
-    mode='triangular2',
+    max_lr=1e-3 * len(gpus),
+    step_size_up=int(train_dataset_len * epochs // 2),
     cycle_momentum=False,
 )
 scheduler_update_params = dict(

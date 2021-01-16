@@ -10,26 +10,32 @@ import numpy as np
 class VWPPEDataset(Dataset):
     def __init__(self,
                  path_to_dir: str,
-                 is_train: bool = True,
+                 mode: str,
                  debug: bool = False,
                  transforms=None):
         super(VWPPEDataset, self).__init__()
+        assert mode in ['virtual_train', 'virtual_val',
+                        'real_train', 'real_val']
         self._debug = debug
         self._transforms = transforms
         self._images = []
         self._anns = []
-        self._is_train = is_train
-        postfix_paths = []
-        if is_train:
-            postfix_paths.append(os.path.join(path_to_dir, "dataset_1088x612"))
-        else:
-            # Using all dataset as test
-            postfix_paths.append(os.path.join("real_dataset", "valid"))
-            postfix_paths.append(os.path.join("real_dataset", "train"))
+        self._mode = mode
+        if mode == 'virtual_train' or mode == 'virtual_val':
+            path_to_data = os.path.join(path_to_dir, "dataset_1088x612")
+        elif mode == 'real_train':
+            path_to_data = os.path.join("real_dataset", "train")
+        elif mode == 'real_val':
+            path_to_data = os.path.join("real_dataset", "valid")
 
-        dir_paths = [os.path.join(path_to_dir, postfix) for postfix in postfix_paths]
-        for path in dir_paths:
-            for subdir, dirs, files in os.walk(path):
+        top_folder_dirs = os.listdir(path_to_data)
+        if mode == 'virtual_train':
+            working_folders = top_folder_dirs[:int(0.9*len(top_folder_dirs))]
+        elif mode == 'virtual_val':
+            working_folders = top_folder_dirs[int(0.9*len(top_folder_dirs)):]
+
+        for subdir, dirs, files in os.walk(path_to_data):
+            if any(folder in subdir for folder in working_folders):
                 for file in files:
                     if 'txt' not in file.split('/')[-1]:
                         self._images.append(os.path.join(subdir, file))
@@ -48,7 +54,7 @@ class VWPPEDataset(Dataset):
         assert len(self._images) == len(self._anns), \
             "Annotations and images have not same length"
 
-        print(f'Length of {"train" if is_train else "test"} dataset is {len(self._anns)}')
+        print(f'Length of {mode} dataset is {len(self._anns)}')
 
     @staticmethod
     def _get_annotations_from_file(filename: str):
@@ -73,7 +79,6 @@ class VWPPEDataset(Dataset):
         if self._transforms is not None:
             image_anno_dict = self._transforms(**image_anno_dict)
 
-        # Transform to absolute coordinates for boxes augmentation
         image_width = image_anno_dict['image'].shape[2]
         image_height = image_anno_dict['image'].shape[1]
         image_anno_dict['bboxes'] = [[box[0] * image_width, box[1] * image_height,

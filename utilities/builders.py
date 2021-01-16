@@ -8,7 +8,7 @@ import pytorch_lightning.callbacks as LightningCallbacks
 import torch.optim as OptimizerLib
 import torch.optim.lr_scheduler as LRSchedulerLib
 
-import pipeline.dataset as Datasets
+import pipeline.datasets as Datasets
 import pipeline.losses as Losses
 import nn_constructor.loss_heads as LossHeads
 import pipeline.metrics as CustomMetrics
