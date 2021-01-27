@@ -25,14 +25,18 @@ class VWPPEDataset(Dataset):
             path_to_data = os.path.join(path_to_dir, "dataset_1088x612")
         elif mode == 'real_train':
             path_to_data = os.path.join("real_dataset", "train")
+            path_to_data = os.path.join(path_to_dir, path_to_data)
         elif mode == 'real_val':
             path_to_data = os.path.join("real_dataset", "valid")
+            path_to_data = os.path.join(path_to_dir, path_to_data)
 
         top_folder_dirs = os.listdir(path_to_data)
         if mode == 'virtual_train':
             working_folders = top_folder_dirs[:int(0.9*len(top_folder_dirs))]
         elif mode == 'virtual_val':
             working_folders = top_folder_dirs[int(0.9*len(top_folder_dirs)):]
+        elif mode == 'real_val' or mode == 'real_train':
+            working_folders = os.path.split(path_to_data)[-1]
 
         for subdir, dirs, files in os.walk(path_to_data):
             if any(folder in subdir for folder in working_folders):
@@ -54,7 +58,7 @@ class VWPPEDataset(Dataset):
         assert len(self._images) == len(self._anns), \
             "Annotations and images have not same length"
 
-        print(f'Length of {mode} dataset is {len(self._anns)}')
+        print(f'Length of VWPPEDataset {mode} dataset is {len(self._anns)}')
 
     @staticmethod
     def _get_annotations_from_file(filename: str):
@@ -85,6 +89,8 @@ class VWPPEDataset(Dataset):
                                       box[2] * image_width, box[3] * image_height, box[4]]
                                      for box in image_anno_dict['bboxes']]
 
+        for bbox in image_anno_dict['bboxes']:
+            print('Class_id=', bbox[4])
         if self._debug and self._transforms is not None:
             image_copy_debug = image_anno_dict['image'].detach().cpu().numpy()
             image_copy_debug = np.transpose(image_copy_debug, (1, 2, 0))

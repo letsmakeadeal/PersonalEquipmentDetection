@@ -17,6 +17,7 @@ __all__ = ['LightningEquipmentDetNet']
 
 class LightningEquipmentDetNet(pl.LightningModule):
     def __init__(self,
+                 load_from_checkpoint: str,
                  backbone_cfg: CfgT = dict(),
                  loss_head_cfg: Optional[CfgT] = None,
                  metric_cfgs: List[CfgT] = list(),
@@ -48,6 +49,9 @@ class LightningEquipmentDetNet(pl.LightningModule):
         self._val_dataset_names = []
         self._metric_names = set()
         self._build_models()
+
+        if load_from_checkpoint is not None:
+            self.load_state_dict(torch.load(load_from_checkpoint), strict=False)
 
     def _build_models(self):
         self.backbone = build_backbone_from_cfg(self.backbone_cfg.copy())

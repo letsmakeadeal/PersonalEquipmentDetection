@@ -4,11 +4,13 @@ from typing import List
 
 
 class DatasetAggregator(Dataset):
-    def __init__(self, datasets: List[Dataset]):
+    def __init__(self, datasets: List[dict], transforms):
         super(DatasetAggregator, self).__init__()
-        self.datasets = datasets
+        from utilities.builders import build_dataset_from_cfg
+        self.datasets = [build_dataset_from_cfg(transforms, dataset) for dataset in datasets]
         datasets_to_idxs = [list(zip([idx for _ in range(len(dataset))], range(len(dataset))))
-                            for idx, dataset in enumerate(datasets)]
+                            for idx, dataset in enumerate(self.datasets)]
+
         datasets_to_idxs = [inner_item for item in datasets_to_idxs for inner_item in item]
 
         print(f'Number of samples in DatasetAggregator {len(datasets_to_idxs)}')

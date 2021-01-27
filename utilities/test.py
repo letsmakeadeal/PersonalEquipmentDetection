@@ -7,14 +7,14 @@ import albumentations as A
 from pipeline.datasets import VWPPEDataset
 from utilities.common import collate_fn
 from modules.lightning_module import LightningEquipmentDetNet
-from config import (backbone_cfg, loss_head_cfg, classes)
+from configs.config_train_real import (backbone_cfg, loss_head_cfg, classes)
 
 if __name__ == '__main__':
     colours = [(255, 0, 0), (255, 127, 0), (0, 0, 255),
                (255, 255, 0), (0, 255, 0), (46, 43, 95), (139, 0, 255)]
     idententy_per_class = dict(zip(range(len(classes)), list(zip(colours, classes))))
     path_to_dir = '/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask/'
-    checkpoint_path = '/home/ivan/MLTasks/home_projects/PersonalEquipmentDetection/results/epoch=13_AP=0.00.ckpt'
+    checkpoint_path = '/home/ivan/MLTasks/home_projects/PersonalEquipmentDetection/results/epoch=23_AP=0.0000.ckpt'
     width = 1088
     height = 640
     divider = 32
@@ -29,15 +29,17 @@ if __name__ == '__main__':
         ])
 
     model = LightningEquipmentDetNet.load_from_checkpoint(checkpoint_path=checkpoint_path,
+                                                          load_from_checkpoint=None,
                                                           backbone_cfg=backbone_cfg,
                                                           loss_head_cfg=loss_head_cfg)
     model.eval()
     model.cuda()
 
     dataset = VWPPEDataset(path_to_dir=path_to_dir,
-                           is_train=False,
+                           mode='real_train',
                            transforms=transforms)
-    dataloader = DataLoader(dataset, collate_fn=collate_fn,
+    dataloader = DataLoader(dataset,
+                            collate_fn=collate_fn,
                             batch_size=1,
                             shuffle=False,
                             num_workers=1)

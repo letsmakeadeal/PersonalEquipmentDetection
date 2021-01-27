@@ -2,12 +2,12 @@ seed = 42
 gpus = [0]
 batch_size = 32
 epochs = 30
-num_workers = 8
+num_workers = 16
 
 train_dataset_len = 91756 // batch_size
 height = 640
 width = 1088
-classes = ['bare_head', 'helmet', 'ear_protection', 'welding_mask',
+classes = ['bare_head', 'helmet', 'welding_mask', 'ear_protection',
            'bare_chest', 'high_visibility_vest', 'person']
 num_classes = 7
 background_color = (0, 0, 0)
@@ -27,7 +27,7 @@ trainer_cfg = dict(
     terminate_on_nan=True,
     distributed_backend='ddp',
     precision=16,
-    sync_batchnorm=True,
+    sync_batchnorm=True
 )
 wandb_cfg = dict(
     name=f'{__file__.split("/")[-1].replace(".py", "")}_{height}_{width}_{batch_size}_ep{epochs}',
@@ -60,10 +60,11 @@ metric_cfgs = [
 
 train_transforms_cfg = dict(
     type='Compose', transforms=[
-        dict(type='LongestMaxSize', max_size=max(width, height)),
-        dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
-             value=(0, 0, 0), border_mode=0),
-        dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
+        # dict(type='LongestMaxSize', max_size=max(width, height)),
+        # dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
+        #      value=(0, 0, 0), border_mode=0),
+        # dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
+        dict(type='Resize', height=height, width=width),
         dict(type='RandomBrightnessContrast', brightness_limit=(-0.2, 0.2), contrast_limit=(-0.2, 0.2), p=0.5),
         dict(type='RGBShift', r_shift_limit=(10, 20), g_shift_limit=(10, 20), b_shift_limit=(10, 20), p=0.7),
         dict(type='OneOf', transforms=[
@@ -78,26 +79,41 @@ train_transforms_cfg = dict(
 
 val_transforms_cfg = dict(
     type='Compose', transforms=[
-        dict(type='LongestMaxSize', max_size=max(width, height)),
-        dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
-             value=(0, 0, 0), border_mode=0),
-        dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
+        # dict(type='LongestMaxSize', max_size=max(width, height)),
+        # dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
+        #      value=(0, 0, 0), border_mode=0),
+        # dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
+        dict(type='Resize', width=width, height=height),
         dict(type='Normalize', mean=(0., 0., 0.), std=(1., 1., 1.)),
         dict(type='ToTensorV2')
     ])
 
 train_dataset_cfg = dict(
-    type='VWPPEDataset',
-    mode='virtual_train',
-    path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-    debug=False
+    type='DatasetAggregator',
+    datasets=[
+        dict(type='VWPPEDataset',
+             mode='real_train',
+             path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
+             debug=False),
+        # dict(type='PictorPPEDataset',
+        #      mode='train',
+        #      path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
+        #      debug=True),
+    ]
 )
 
 val_dataset_cfg = dict(
-    type='VWPPEDataset',
-    mode='virtual_val',
-    path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-    debug=False
+    type='DatasetAggregator',
+    datasets=[
+        dict(type='VWPPEDataset',
+             mode='real_val',
+             path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
+             debug=False),
+        # dict(type='PictorPPEDataset',
+        #      mode='val',
+        #      path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
+        #      debug=True)
+    ]
 )
 
 train_dataloader_cfg = dict(
@@ -110,7 +126,7 @@ train_dataloader_cfg = dict(
 
 val_dataloader_cfg = dict(
     batch_size=batch_size,
-    shuffle=False,
+    shuffle=True,
     num_workers=num_workers,
 )
 
@@ -123,7 +139,7 @@ scheduler_cfg = dict(
     type='CyclicLR',
     base_lr=1e-6 * len(gpus),
     max_lr=1e-3 * len(gpus),
-    step_size_up=int(train_dataset_len * epochs // 2),
+    step_size_up=int(train_dataset_len * epochs // (2 * len(gpus))),
     cycle_momentum=False,
 )
 scheduler_update_params = dict(
@@ -133,6 +149,7 @@ scheduler_update_params = dict(
 
 module_cfg = dict(
     type='LightningEquipmentDetNet',
+    load_from_checkpoint='/home/ivan/MLTasks/home_projects/PersonalEquipmentDetection/results/epoch=13_AP=0.00.ckpt',
     backbone_cfg=backbone_cfg,
     loss_head_cfg=loss_head_cfg,
     metric_cfgs=metric_cfgs,
