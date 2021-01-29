@@ -1,10 +1,10 @@
 seed = 42
 gpus = [0]
-batch_size = 32
+batch_size = 20
 epochs = 30
-num_workers = 16
+num_workers = 8
 
-train_dataset_len = 91756 // batch_size
+train_dataset_len = 610 // batch_size
 height = 640
 width = 1088
 classes = ['bare_head', 'helmet', 'welding_mask', 'ear_protection',
@@ -19,8 +19,8 @@ trainer_cfg = dict(
     callbacks=[
         dict(type='LearningRateMonitor', logging_interval='step'),
         dict(type='ModelCheckpoint', save_top_k=5, verbose=True, mode='max',
-             monitor='mAP_0.5', dirpath='./results/',
-             filename='{epoch:02d}_{AP:.4f}')
+             monitor='mAP_05', dirpath='./results/',
+             filename='{epoch:02d}_{mAP_05:.4f}')
     ],
     benchmark=True,
     deterministic=True,
@@ -35,36 +35,37 @@ wandb_cfg = dict(
 )
 
 backbone_cfg = dict(
-    type='ResNet', depth=34
+    type='ResNet', depth=50
 )
 
 loss_head_cfg = dict(
     type='TTFHead',
-    num_classes=num_classes
+    num_classes=num_classes,
+    inplanes=(256, 512, 1024, 2048),
+    planes=(1024, 512, 256),
 )
 
 metric_cfgs = [
     dict(type='mAP',
          labels_ids=dict(zip(range(len(classes)), classes)),
          iou_treshold=0.5,
-         name='mAP_0.5'),
+         name='mAP_05'),
     dict(type='mAP',
          labels_ids=dict(zip(range(len(classes)), classes)),
          iou_treshold=0.75,
-         name='mAP_0.75'),
+         name='mAP_075'),
     dict(type='mAP',
          labels_ids=dict(zip(range(len(classes)), classes)),
          iou_treshold=0.95,
-         name='mAP_0.95'),
+         name='mAP_095'),
 ]
 
 train_transforms_cfg = dict(
     type='Compose', transforms=[
-        # dict(type='LongestMaxSize', max_size=max(width, height)),
-        # dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
-        #      value=(0, 0, 0), border_mode=0),
-        # dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
-        dict(type='Resize', height=height, width=width),
+        dict(type='LongestMaxSize', max_size=max(width, height)),
+        dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
+             value=(0, 0, 0), border_mode=0),
+        dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
         dict(type='RandomBrightnessContrast', brightness_limit=(-0.2, 0.2), contrast_limit=(-0.2, 0.2), p=0.5),
         dict(type='RGBShift', r_shift_limit=(10, 20), g_shift_limit=(10, 20), b_shift_limit=(10, 20), p=0.7),
         dict(type='OneOf', transforms=[
@@ -79,11 +80,10 @@ train_transforms_cfg = dict(
 
 val_transforms_cfg = dict(
     type='Compose', transforms=[
-        # dict(type='LongestMaxSize', max_size=max(width, height)),
-        # dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
-        #      value=(0, 0, 0), border_mode=0),
-        # dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
-        dict(type='Resize', width=width, height=height),
+        dict(type='LongestMaxSize', max_size=max(width, height)),
+        dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
+             value=(0, 0, 0), border_mode=0),
+        dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
         dict(type='Normalize', mean=(0., 0., 0.), std=(1., 1., 1.)),
         dict(type='ToTensorV2')
     ])
@@ -95,10 +95,10 @@ train_dataset_cfg = dict(
              mode='real_train',
              path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
              debug=False),
-        # dict(type='PictorPPEDataset',
-        #      mode='train',
-        #      path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-        #      debug=True),
+        dict(type='PictorPPEDataset',
+             mode='train',
+             path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
+             debug=False),
     ]
 )
 
@@ -109,10 +109,10 @@ val_dataset_cfg = dict(
              mode='real_val',
              path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
              debug=False),
-        # dict(type='PictorPPEDataset',
-        #      mode='val',
-        #      path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-        #      debug=True)
+        dict(type='PictorPPEDataset',
+             mode='val',
+             path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
+             debug=False)
     ]
 )
 
@@ -137,8 +137,8 @@ optimizer_cfg = dict(
 )
 scheduler_cfg = dict(
     type='CyclicLR',
-    base_lr=1e-6 * len(gpus),
-    max_lr=1e-3 * len(gpus),
+    base_lr=1e-8 * len(gpus),
+    max_lr=1e-4 * len(gpus),
     step_size_up=int(train_dataset_len * epochs // (2 * len(gpus))),
     cycle_momentum=False,
 )
@@ -149,7 +149,7 @@ scheduler_update_params = dict(
 
 module_cfg = dict(
     type='LightningEquipmentDetNet',
-    load_from_checkpoint='/home/ivan/MLTasks/home_projects/PersonalEquipmentDetection/results/epoch=13_AP=0.00.ckpt',
+    load_from_checkpoint=None,
     backbone_cfg=backbone_cfg,
     loss_head_cfg=loss_head_cfg,
     metric_cfgs=metric_cfgs,

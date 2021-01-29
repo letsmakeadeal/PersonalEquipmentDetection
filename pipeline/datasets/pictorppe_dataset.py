@@ -66,7 +66,8 @@ class PictorPPEDataset(Dataset):
         # Normalizing bboxes becouse transforms needed it
 
         bboxes = [[float(box[0]) / image.shape[1], float(box[1]) / image.shape[0],
-                   float(box[2]) / image.shape[1], float(box[3]) / image.shape[0],
+                   float(box[2]) / image.shape[1] + float(box[0]) / image.shape[1],
+                   float(box[3]) / image.shape[0] + float(box[1]) / image.shape[0],
                    box[4]]
                   for box in bboxes]
 
@@ -92,7 +93,7 @@ class PictorPPEDataset(Dataset):
             image_copy_debug = np.transpose(image_copy_debug, (1, 2, 0))
             for bbox in image_anno_dict['bboxes']:
                 x0y0 = (int(bbox[0]), int(bbox[1]))
-                x1y1 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+                x1y1 = (int(bbox[2]), int(bbox[3]))
                 image_copy_debug = cv2.rectangle(image_copy_debug, x0y0, x1y1, (0, 0, 255), 3)
                 image_copy_debug = cv2.putText(image_copy_debug, self._labels_names[bbox[4]],
                                                x1y1, cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255))

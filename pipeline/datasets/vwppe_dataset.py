@@ -68,7 +68,8 @@ class VWPPEDataset(Dataset):
             for line in file.readlines():
                 class_id, x0, y0, w, h = \
                     [float(value) for value in line.split(' ') if value != '\n']
-                image_anno_dict['bboxes'].append([x0 - w / 2, y0 - h / 2, w, h, class_id])
+                image_anno_dict['bboxes'].append([x0 - w / 2, y0 - h / 2,
+                                                  x0 - w / 2 + w, y0 - h / 2 + h, class_id])
 
         return image_anno_dict
 
@@ -89,14 +90,12 @@ class VWPPEDataset(Dataset):
                                       box[2] * image_width, box[3] * image_height, box[4]]
                                      for box in image_anno_dict['bboxes']]
 
-        for bbox in image_anno_dict['bboxes']:
-            print('Class_id=', bbox[4])
         if self._debug and self._transforms is not None:
             image_copy_debug = image_anno_dict['image'].detach().cpu().numpy()
             image_copy_debug = np.transpose(image_copy_debug, (1, 2, 0))
             for bbox in image_anno_dict['bboxes']:
                 x0y0 = (int(bbox[0]), int(bbox[1]))
-                x1y1 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+                x1y1 = (int(bbox[2]), int(bbox[3]))
                 image_copy_debug = cv2.rectangle(image_copy_debug, x0y0, x1y1, (0, 0, 255), 3)
 
             cv2.namedWindow('debug', cv2.WINDOW_KEEPRATIO)
