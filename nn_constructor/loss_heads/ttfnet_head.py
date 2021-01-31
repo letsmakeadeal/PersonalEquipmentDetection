@@ -504,8 +504,6 @@ class TTFHead(nn.Module):
         reg_weight = gt_info['bboxes'].new_zeros((self.wh_planes // 4, output_h, output_w))
 
         bboxes = gt_info['bboxes']
-        bboxes[:, 2] = bboxes[:, 2] + bboxes[:, 0]
-        bboxes[:, 3] = bboxes[:, 3] + bboxes[:, 1]
 
         if len(bboxes) == 0:
             return heatmap, box_target, reg_weight

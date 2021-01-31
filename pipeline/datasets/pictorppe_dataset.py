@@ -47,7 +47,7 @@ class PictorPPEDataset(Dataset):
                 for bbox in line_splitted[1:]:
                     x0, y0, x1, y1, class_id = map(int, bbox.split(','))
                     class_id = self._mapping_to_vvppe_dataset[class_id]
-                    bboxes_per_image.append([x0, y0, x1 - x0, y1 - y0, class_id])
+                    bboxes_per_image.append([x0, y0, x1, y1, class_id])
 
                 if bboxes_per_image:
                     self._images.append(image_filename)

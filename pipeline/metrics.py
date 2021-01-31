@@ -28,10 +28,10 @@ class mAP(Metric):
     def update(self, predicted_boxes, gt_info):
         for image_info in gt_info:
             for bbox_info in image_info['bboxes']:
-                self._gt_bboxes.append(dict(x=bbox_info[0].item(),
-                                            y=bbox_info[1].item(),
-                                            w=bbox_info[2].item(),
-                                            h=bbox_info[3].item(),
+                self._gt_bboxes.append(dict(x1=bbox_info[0].item(),
+                                            y1=bbox_info[1].item(),
+                                            x2=bbox_info[2].item(),
+                                            y2=bbox_info[3].item(),
                                             class_id=bbox_info[4].item(),
                                             image_size=(image_info['image_width'],
                                                         image_info['image_height']),
@@ -39,10 +39,10 @@ class mAP(Metric):
 
         for image_info in predicted_boxes:
             for bbox_info in image_info['bboxes']:
-                self._pred_bboxes.append(dict(x=bbox_info[0].item(),
-                                              y=bbox_info[1].item(),
-                                              w=bbox_info[2].item(),
-                                              h=bbox_info[3].item(),
+                self._pred_bboxes.append(dict(x1=bbox_info[0].item(),
+                                              y1=bbox_info[1].item(),
+                                              x2=bbox_info[2].item(),
+                                              y2=bbox_info[3].item(),
                                               confidence=bbox_info[4].item(),
                                               class_id=bbox_info[5].item(),
                                               image_size=(image_info['image_width'],
@@ -54,14 +54,14 @@ class mAP(Metric):
         for bbox in self._gt_bboxes:
             all_bboxes.addBoundingBox(BoundingBox(imageName=bbox['image_name'],
                                                   classId=bbox['class_id'],
-                                                  x=bbox['x'],
-                                                  y=bbox['y'],
-                                                  w=bbox['w'],
-                                                  h=bbox['h'],
+                                                  x=bbox['x1'],
+                                                  y=bbox['y1'],
+                                                  w=bbox['x2'] - bbox['x1'],
+                                                  h=bbox['y2'] - bbox['y1'],
                                                   typeCoordinates=CoordinatesType.Absolute,
                                                   classConfidence=1,
                                                   bbType=BBType.GroundTruth,
-                                                  format=BBFormat.XYX2Y2,
+                                                  format=BBFormat.XYWH,
                                                   imgSize=bbox['image_size']))
 
         for bbox in self._pred_bboxes:
@@ -69,12 +69,12 @@ class mAP(Metric):
                                                   classId=bbox['class_id'],
                                                   x=bbox['x'],
                                                   y=bbox['y'],
-                                                  w=bbox['w'],
-                                                  h=bbox['h'],
+                                                  w=bbox['x2'] - bbox['x1'],
+                                                  h=bbox['y2'] - bbox['y1'],
                                                   classConfidence=bbox['confidence'],
                                                   typeCoordinates=CoordinatesType.Absolute,
                                                   bbType=BBType.Detected,
-                                                  format=BBFormat.XYX2Y2,
+                                                  format=BBFormat.XYWH,
                                                   imgSize=bbox['image_size']))
         return all_bboxes
 
