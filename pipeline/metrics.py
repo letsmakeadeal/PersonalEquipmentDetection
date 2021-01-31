@@ -67,8 +67,8 @@ class mAP(Metric):
         for bbox in self._pred_bboxes:
             all_bboxes.addBoundingBox(BoundingBox(imageName=bbox['image_name'],
                                                   classId=bbox['class_id'],
-                                                  x=bbox['x'],
-                                                  y=bbox['y'],
+                                                  x=bbox['x1'],
+                                                  y=bbox['y1'],
                                                   w=bbox['x2'] - bbox['x1'],
                                                   h=bbox['y2'] - bbox['y1'],
                                                   classConfidence=bbox['confidence'],
