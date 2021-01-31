@@ -66,10 +66,9 @@ class PictorPPEDataset(Dataset):
         bboxes = self._bboxes[idx]
         image = cv2.imread(filename)
         
-        # Normalizing bboxes becouse transforms needed it
+        # Normalizing bboxes because transforms needed it
         bboxes = [[float(box[0]) / image.shape[1], float(box[1]) / image.shape[0],
-                   float(box[2]) / image.shape[1] + float(box[0]) / image.shape[1],
-                   float(box[3]) / image.shape[0] + float(box[1]) / image.shape[0],
+                   float(box[2]) / image.shape[1], float(box[3]) / image.shape[0],
                    box[4]]
                   for box in bboxes]
 
