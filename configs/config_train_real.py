@@ -35,14 +35,12 @@ wandb_cfg = dict(
 )
 
 backbone_cfg = dict(
-    type='ResNet', depth=50
+    type='ResNet', depth=34
 )
 
 loss_head_cfg = dict(
     type='TTFHead',
-    num_classes=num_classes,
-    inplanes=(256, 512, 1024, 2048),
-    planes=(1024, 512, 256),
+    num_classes=num_classes
 )
 
 metric_cfgs = [

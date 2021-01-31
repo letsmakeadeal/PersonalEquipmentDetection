@@ -1,10 +1,10 @@
 seed = 42
 gpus = [0]
-batch_size = 29
+batch_size = 32
 epochs = 30
 num_workers = 8
 
-train_dataset_len = 91756 // batch_size
+train_dataset_len = 81859 // batch_size
 height = 640
 width = 1088
 classes = ['bare_head', 'helmet', 'ear_protection', 'welding_mask',
@@ -35,14 +35,12 @@ wandb_cfg = dict(
 )
 
 backbone_cfg = dict(
-    type='ResNet', depth=50
+    type='ResNet', depth=34
 )
 
 loss_head_cfg = dict(
     type='TTFHead',
-    num_classes=num_classes,
-    inplanes=(256, 512, 1024, 2048),
-    planes=(1024, 512, 256),
+    num_classes=num_classes
 )
 
 metric_cfgs = [

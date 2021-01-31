@@ -61,7 +61,7 @@ class mAP(Metric):
                                                   typeCoordinates=CoordinatesType.Absolute,
                                                   classConfidence=1,
                                                   bbType=BBType.GroundTruth,
-                                                  format=BBFormat.XYWH,
+                                                  format=BBFormat.XYX2Y2,
                                                   imgSize=bbox['image_size']))
 
         for bbox in self._pred_bboxes:

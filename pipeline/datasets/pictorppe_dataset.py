@@ -19,6 +19,8 @@ class PictorPPEDataset(Dataset):
         self._debug = debug
         self._labels_names = ['helmet', 'vest', 'person']
         self._mapping_to_vvppe_dataset = {0: 1, 1: 5, 2: 6}
+        self._revert_mapping = dict(zip(self._mapping_to_vvppe_dataset.values(),
+                                        self._mapping_to_vvppe_dataset.keys()))
         self._transforms = transforms
         self._path_to_dir = os.path.join(path_to_dir, "pictor-ppe")
 
@@ -44,7 +46,7 @@ class PictorPPEDataset(Dataset):
                 bboxes_per_image = []
                 for bbox in line_splitted[1:]:
                     x0, y0, x1, y1, class_id = map(int, bbox.split(','))
-                    # class_id = self._mapping_to_vvppe_dataset[class_id]
+                    class_id = self._mapping_to_vvppe_dataset[class_id]
                     bboxes_per_image.append([x0, y0, x1 - x0, y1 - y0, class_id])
 
                 if bboxes_per_image:
@@ -63,8 +65,8 @@ class PictorPPEDataset(Dataset):
         filename = self._images[idx]
         bboxes = self._bboxes[idx]
         image = cv2.imread(filename)
+        
         # Normalizing bboxes becouse transforms needed it
-
         bboxes = [[float(box[0]) / image.shape[1], float(box[1]) / image.shape[0],
                    float(box[2]) / image.shape[1] + float(box[0]) / image.shape[1],
                    float(box[3]) / image.shape[0] + float(box[1]) / image.shape[0],
@@ -95,7 +97,7 @@ class PictorPPEDataset(Dataset):
                 x0y0 = (int(bbox[0]), int(bbox[1]))
                 x1y1 = (int(bbox[2]), int(bbox[3]))
                 image_copy_debug = cv2.rectangle(image_copy_debug, x0y0, x1y1, (0, 0, 255), 3)
-                image_copy_debug = cv2.putText(image_copy_debug, self._labels_names[bbox[4]],
+                image_copy_debug = cv2.putText(image_copy_debug, self._labels_names[self._revert_mapping[bbox[4]]],
                                                x1y1, cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255))
 
             cv2.namedWindow('debug', cv2.WINDOW_KEEPRATIO)
