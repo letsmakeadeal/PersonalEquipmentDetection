@@ -51,7 +51,7 @@ class LightningEquipmentDetNet(pl.LightningModule):
         self._build_models()
 
         if load_from_checkpoint is not None:
-            self.load_state_dict(torch.load(load_from_checkpoint), strict=False)
+            self.load_state_dict(torch.load(load_from_checkpoint)['state_dict'], strict=True)
 
     def _build_models(self):
         self.backbone = build_backbone_from_cfg(self.backbone_cfg.copy())
