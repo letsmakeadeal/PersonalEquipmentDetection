@@ -18,7 +18,6 @@ __all__ = ['LightningEquipmentDetNet']
 class LightningEquipmentDetNet(pl.LightningModule):
     def __init__(self,
                  load_from_checkpoint: str,
-                 fine_tune_stage: bool,
                  backbone_cfg: CfgT = dict(),
                  loss_head_cfg: Optional[CfgT] = None,
                  metric_cfgs: List[CfgT] = list(),
@@ -51,16 +50,8 @@ class LightningEquipmentDetNet(pl.LightningModule):
         self._metric_names = set()
         self._build_models()
 
-        if load_from_checkpoint is not None and not fine_tune_stage:
+        if load_from_checkpoint is not None:
             self.load_state_dict(torch.load(load_from_checkpoint)['state_dict'], strict=False)
-            for param in self.backbone.parameters():
-                param.requires_grad = False
-
-            for name, module in self.backbone.named_modules():
-                if (isinstance(module, torch.nn.modules.BatchNorm1d) or
-                        isinstance(module, torch.nn.modules.BatchNorm2d) or
-                        isinstance(module, torch.nn.modules.BatchNorm3d)):
-                    module.eval()
 
     def _build_models(self):
         self.backbone = build_backbone_from_cfg(self.backbone_cfg.copy())

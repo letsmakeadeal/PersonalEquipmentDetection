@@ -35,7 +35,9 @@ wandb_cfg = dict(
 )
 
 backbone_cfg = dict(
-    type='ResNet', depth=34
+    type='ResNet',
+    depth=34,
+    frozen_stages=3
 )
 
 loss_head_cfg = dict(
@@ -134,7 +136,6 @@ scheduler_update_params = dict(
 module_cfg = dict(
     type='LightningEquipmentDetNet',
     load_from_checkpoint=None,
-    fine_tune_stage=False,
     backbone_cfg=backbone_cfg,
     loss_head_cfg=loss_head_cfg,
     metric_cfgs=metric_cfgs,
