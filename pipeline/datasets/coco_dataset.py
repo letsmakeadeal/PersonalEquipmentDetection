@@ -6,6 +6,8 @@ from torch.utils.data import Dataset
 from pycocotools.coco import COCO
 import cv2
 
+from typing import List
+
 
 class CocoDataset(Dataset):
     def __init__(self,
@@ -21,17 +23,42 @@ class CocoDataset(Dataset):
         self._coco = \
             COCO("{}/annotations/instances_{}{}.json".format(dataset_dir, mode, year))
         self._class_ids = sorted(self._coco.getCatIds())
-        self._image_ids = list(self._coco.imgs.keys())
+        self._image_ids = self._download_validated_images_anns()
         categories_names = [self._coco.loadCats(i)[0]["name"] for i in self._class_ids]
         self._class_id_to_category_name = dict(zip(self._class_ids, categories_names))
         self._class_id_plain_idx = dict(zip(self._class_ids, range(len(self._class_ids))))
 
         print(f'Length of COCO {mode} dataset is {len(self._image_ids)}')
 
+    def _download_validated_images_anns(self):
+        images_ids = list(self._coco.imgs.keys())
+        imgs_idx_result = []
+        for idx in range(len(images_ids)):
+            idx_to_image_idx = images_ids[idx]
+            anns = self._coco.loadAnns(self._coco.getAnnIds(
+                imgIds=[idx_to_image_idx], catIds=self._class_ids, iscrowd=None))
+            bboxes = [ann['bbox'] + [ann['category_id']] for ann in anns]
+            if len(bboxes) == 0 or np.all([len(bbox) == 0 for bbox in bboxes]):
+                continue
+            imgs_idx_result.append(images_ids[idx])
+        return imgs_idx_result
+
+    def _prepare_bboxes_after_transforms(self,
+                                         bboxes: List):
+        output_bboxes = []
+        for bbox in bboxes:
+            if (bbox[1] < 0 and bbox[3] < 0) or \
+                    (bbox[0] < 0 and bbox[2] < 0):
+                continue
+            output_bboxes.append([bbox[0], bbox[1], bbox[2], bbox[3],
+                                  self._class_id_plain_idx[bbox[4]]])
+
+        return output_bboxes
+
     def __getitem__(self, idx):
         idx_to_image_idx = self._image_ids[idx]
         anns = self._coco.loadAnns(self._coco.getAnnIds(
-                    imgIds=[idx_to_image_idx], catIds=self._class_ids, iscrowd=None))
+            imgIds=[idx_to_image_idx], catIds=self._class_ids, iscrowd=None))
         width = self._coco.imgs[idx_to_image_idx]["width"]
         height = self._coco.imgs[idx_to_image_idx]["height"]
         image_filename = os.path.join(self._image_dir,
@@ -74,8 +101,8 @@ class CocoDataset(Dataset):
             cv2.imshow('debug', image_copy_debug)
             cv2.waitKey(0)
 
-        image_anno_dict['bboxes'] = [[bbox[0], bbox[1], bbox[2], bbox[3],
-                                      self._class_id_plain_idx[bbox[4]]] for bbox in bboxes]
+        image_anno_dict['bboxes'] = self._prepare_bboxes_after_transforms(image_anno_dict['bboxes'])
+
         return image_anno_dict
 
     def __len__(self):
