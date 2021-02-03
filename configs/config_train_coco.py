@@ -1,15 +1,22 @@
 seed = 42
 gpus = [0]
-batch_size = 20
-epochs = 30
-num_workers = 8
+batch_size = 4
+epochs = 32
+num_workers = 3
 
-train_dataset_len = 610 // batch_size
+train_dataset_len = 118287 // batch_size
 height = 640
 width = 1088
-classes = ['bare_head', 'helmet', 'welding_mask', 'ear_protection',
-           'bare_chest', 'high_visibility_vest', 'person']
-num_classes = 7
+classes = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
+           'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
+           'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase',
+           'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard',
+           'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana',
+           'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
+           'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard',
+           'cell phone', 'microwave', 'oven', 'toaster',
+           'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+num_classes = 80
 background_color = (0, 0, 0)
 divider = 32
 
@@ -20,7 +27,7 @@ trainer_cfg = dict(
         dict(type='LearningRateMonitor', logging_interval='step'),
         dict(type='ModelCheckpoint', save_top_k=2, verbose=True, mode='max',
              monitor='mAP_05', dirpath='./results/',
-             filename='real_{epoch:02d}_{mAP_05:.4f}')
+             filename='coco_{epoch:02d}_{mAP_05:.4f}')
     ],
     benchmark=True,
     deterministic=True,
@@ -87,31 +94,17 @@ val_transforms_cfg = dict(
     ])
 
 train_dataset_cfg = dict(
-    type='DatasetAggregator',
-    datasets=[
-        dict(type='VWPPEDataset',
-             mode='real_train',
-             path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-             debug=False),
-        dict(type='PictorPPEDataset',
-             mode='train',
-             path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-             debug=False),
-    ]
+    type='CocoDataset',
+    mode='train',
+    dataset_dir='/home/ivan/MLTasks/Datasets/coco',
+    debug=True
 )
 
 val_dataset_cfg = dict(
-    type='DatasetAggregator',
-    datasets=[
-        dict(type='VWPPEDataset',
-             mode='real_val',
-             path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-             debug=False),
-        dict(type='PictorPPEDataset',
-             mode='val',
-             path_to_dir='/home/ivan/MLTasks/Datasets/ObjectDetection/PersonEquipmentTask',
-             debug=False)
-    ]
+    type='CocoDataset',
+    mode='val',
+    dataset_dir='/home/ivan/MLTasks/Datasets/coco',
+    debug=False
 )
 
 train_dataloader_cfg = dict(
@@ -124,7 +117,7 @@ train_dataloader_cfg = dict(
 
 val_dataloader_cfg = dict(
     batch_size=batch_size,
-    shuffle=True,
+    shuffle=False,
     num_workers=num_workers,
 )
 
@@ -135,8 +128,8 @@ optimizer_cfg = dict(
 )
 scheduler_cfg = dict(
     type='CyclicLR',
-    base_lr=1e-8 * len(gpus),
-    max_lr=1e-4 * len(gpus),
+    base_lr=1e-6 * len(gpus),
+    max_lr=2e-3 * len(gpus),
     step_size_up=int(train_dataset_len * epochs // (2 * len(gpus))),
     cycle_momentum=False,
 )
@@ -148,7 +141,7 @@ scheduler_update_params = dict(
 module_cfg = dict(
     type='LightningEquipmentDetNet',
     load_from_checkpoint=None,
-    fine_tune_stage=True,
+    fine_tune_stage=False,
     backbone_cfg=backbone_cfg,
     loss_head_cfg=loss_head_cfg,
     metric_cfgs=metric_cfgs,

@@ -69,8 +69,7 @@ class PictorPPEDataset(Dataset):
         # Normalizing bboxes because transforms needed it
         bboxes = [[float(box[0]) / image.shape[1], float(box[1]) / image.shape[0],
                    float(box[2]) / image.shape[1], float(box[3]) / image.shape[0],
-                   box[4]]
-                  for box in bboxes]
+                   box[4]] for box in bboxes]
 
         image_anno_dict = dict(image=cv2.cvtColor(image, cv2.COLOR_BGR2RGB),
                                bboxes=bboxes,
