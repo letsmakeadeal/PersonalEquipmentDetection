@@ -25,9 +25,6 @@ if __name__ == '__main__':
     seed_everything_deterministic(config.seed)
     torch.multiprocessing.set_start_method('spawn', force=True)
 
-    # if hasattr(config, 'mp_start_method'):
-    #     torch.multiprocessing.set_start_method(config.mp_start_method)
-
     if args.gpus is not None:
         config.trainer_cfg['gpus'] = list(map(int, args.gpus))
 
@@ -46,7 +43,7 @@ if __name__ == '__main__':
 
     trainer = Trainer(
         logger=[logger],
-        **config.trainer_cfg
+        **config.trainer_cfg,
     )
 
     trainer.fit(lightning_module)

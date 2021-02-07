@@ -60,10 +60,7 @@ metric_cfgs = [
 
 train_transforms_cfg = dict(
     type='Compose', transforms=[
-        dict(type='LongestMaxSize', max_size=max(width, height)),
-        dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
-             value=(0, 0, 0), border_mode=0),
-        dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
+        dict(type='ResizeWithKeepAspectRatio', height=height, width=width, divider=divider),
         dict(type='RandomBrightnessContrast', brightness_limit=(-0.2, 0.2), contrast_limit=(-0.2, 0.2), p=0.5),
         dict(type='RGBShift', r_shift_limit=(10, 20), g_shift_limit=(10, 20), b_shift_limit=(10, 20), p=0.7),
         dict(type='OneOf', transforms=[
@@ -78,10 +75,7 @@ train_transforms_cfg = dict(
 
 val_transforms_cfg = dict(
     type='Compose', transforms=[
-        dict(type='LongestMaxSize', max_size=max(width, height)),
-        dict(type='PadIfNeeded', min_width=(width // divider) * divider, min_height=(height // divider) * divider,
-             value=(0, 0, 0), border_mode=0),
-        dict(type='CenterCrop', width=(width // divider) * divider, height=(height // divider) * divider),
+        dict(type='ResizeWithKeepAspectRatio', height=height, width=width, divider=divider),
         dict(type='Normalize', mean=(0., 0., 0.), std=(1., 1., 1.)),
         dict(type='ToTensorV2')
     ])
@@ -124,7 +118,7 @@ train_dataloader_cfg = dict(
 
 val_dataloader_cfg = dict(
     batch_size=batch_size,
-    shuffle=True,
+    shuffle=False,
     num_workers=num_workers,
 )
 
@@ -148,6 +142,7 @@ scheduler_update_params = dict(
 module_cfg = dict(
     type='LightningEquipmentDetNet',
     load_from_checkpoint=None,
+    train_stage='fine_tune',
     backbone_cfg=backbone_cfg,
     loss_head_cfg=loss_head_cfg,
     metric_cfgs=metric_cfgs,

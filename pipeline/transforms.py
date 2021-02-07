@@ -1,6 +1,38 @@
 import numpy as np
 import random
 
+import albumentations as AT
+
+__all__ = ['ResizeWithKeepAspectRatio', 'AugMix']
+
+
+class ResizeWithKeepAspectRatio(object):
+    def __init__(self,
+                 height: int,
+                 width: int,
+                 divider: int):
+        self._height = height
+        self._width = width
+        self._resize_if_width_bigger = AT.Compose([
+            AT.LongestMaxSize(max_size=width),
+            AT.PadIfNeeded(min_width=(width // divider) * divider, min_height=(height // divider) * divider,
+                           value=(0, 0, 0), border_mode=0),
+            AT.CenterCrop(width=(width // divider) * divider, height=(height // divider) * divider)
+
+        ])
+        self._resize_if_height_bigger = AT.Compose([
+            AT.LongestMaxSize(max_size=height),
+            AT.PadIfNeeded(min_width=(width // divider) * divider, min_height=(height // divider) * divider,
+                           value=(0, 0, 0), border_mode=0),
+            AT.CenterCrop(width=(width // divider) * divider, height=(height // divider) * divider)
+        ])
+
+    def __call__(self, force_apply=False, **data):
+        h, w, _ = data['image'].shape
+        output = self._resize_if_height_bigger(**data) if h > w else self._resize_if_width_bigger(**data)
+        return output
+
+
 class AugMix(object):
     """Perform AugMix augmentations and compute mixture.
     Code taken and adapted from https://arxiv.org/pdf/1912.02781.pdf
@@ -95,4 +127,3 @@ class AugMix(object):
         data['image'] = _make_aug_img(data['image'])
 
         return data
-

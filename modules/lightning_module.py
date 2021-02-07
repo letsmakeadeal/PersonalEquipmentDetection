@@ -18,6 +18,7 @@ __all__ = ['LightningEquipmentDetNet']
 class LightningEquipmentDetNet(pl.LightningModule):
     def __init__(self,
                  load_from_checkpoint: str,
+                 train_stage: str,
                  backbone_cfg: CfgT = dict(),
                  loss_head_cfg: Optional[CfgT] = None,
                  metric_cfgs: List[CfgT] = list(),
@@ -31,6 +32,7 @@ class LightningEquipmentDetNet(pl.LightningModule):
                  scheduler_cfg: CfgT = dict(),
                  scheduler_update_params: CfgT = dict()):
         super(LightningEquipmentDetNet, self).__init__()
+        self.train_stage = train_stage
         self.backbone_cfg = backbone_cfg
         self.loss_head_cfg = loss_head_cfg
         self.metric_cfgs = metric_cfgs
@@ -45,13 +47,17 @@ class LightningEquipmentDetNet(pl.LightningModule):
         self.scheduler_update_params = scheduler_update_params
         self.save_hyperparameters()
 
-        self.scheduler = None  # Can be useful for LR logging in the progress bar
+        self.scheduler = None
         self._val_dataset_names = []
         self._metric_names = set()
         self._build_models()
 
         if load_from_checkpoint is not None:
-            self.load_state_dict(torch.load(load_from_checkpoint)['state_dict'], strict=False)
+            loaded_dict = torch.load(load_from_checkpoint)['state_dict']
+            if self.train_stage == 'transfer_learning':
+                loaded_dict = {k: v for k, v in loaded_dict.items()
+                               if 'backbone' in k}
+            self.load_state_dict(loaded_dict, strict=False)
 
     def _build_models(self):
         self.backbone = build_backbone_from_cfg(self.backbone_cfg.copy())
