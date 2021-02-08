@@ -13,23 +13,35 @@ class ResizeWithKeepAspectRatio(object):
                  divider: int):
         self._height = height
         self._width = width
-        self._resize_if_width_bigger = AT.Compose([
-            AT.LongestMaxSize(max_size=width),
+        self._resize_if_width_bigger_first_stage = AT.Compose([
+            AT.LongestMaxSize(max_size=(width // divider) * divider),
             AT.PadIfNeeded(min_width=(width // divider) * divider, min_height=(height // divider) * divider,
-                           value=(0, 0, 0), border_mode=0),
-            AT.CenterCrop(width=(width // divider) * divider, height=(height // divider) * divider)
+                           value=(0, 0, 0), border_mode=0)
 
         ])
-        self._resize_if_height_bigger = AT.Compose([
-            AT.LongestMaxSize(max_size=height),
+
+        self._resize_if_width_bigger_second_stage = AT.Compose([
+            AT.SmallestMaxSize(max_size=(height // divider) * divider),
             AT.PadIfNeeded(min_width=(width // divider) * divider, min_height=(height // divider) * divider,
-                           value=(0, 0, 0), border_mode=0),
-            AT.CenterCrop(width=(width // divider) * divider, height=(height // divider) * divider)
+                           value=(0, 0, 0), border_mode=0)
+
+        ])
+
+        self._resize_if_height_bigger = AT.Compose([
+            AT.LongestMaxSize(max_size=(height // divider) * divider),
+            AT.PadIfNeeded(min_width=(width // divider) * divider, min_height=(height // divider) * divider,
+                           value=(0, 0, 0), border_mode=0)
         ])
 
     def __call__(self, force_apply=False, **data):
         h, w, _ = data['image'].shape
-        output = self._resize_if_height_bigger(**data) if h > w else self._resize_if_width_bigger(**data)
+        if h > w:
+            output = self._resize_if_height_bigger(**data)
+        else:
+            output = self._resize_if_width_bigger_first_stage(**data)
+            h_st1, w_st1, _ = output['image'].shape
+            if h_st1 > self._height:
+                output = self._resize_if_width_bigger_second_stage(**output)
         return output
 
 

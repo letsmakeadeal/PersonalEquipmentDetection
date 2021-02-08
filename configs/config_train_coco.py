@@ -16,7 +16,7 @@ classes = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train',
            'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard',
            'cell phone', 'microwave', 'oven', 'toaster',
            'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
-num_classes = 80
+num_classes = len(classes)
 background_color = (0, 0, 0)
 divider = 32
 
@@ -31,7 +31,7 @@ trainer_cfg = dict(
     ],
     benchmark=True,
     deterministic=True,
-    terminate_on_nan=True,
+    terminate_on_nan=False,
     distributed_backend='ddp',
     precision=16,
     sync_batchnorm=True
@@ -82,7 +82,7 @@ train_transforms_cfg = dict(
 
 val_transforms_cfg = dict(
     type='Compose', transforms=[
-        dict(type='ResizeWithKeepAspectRatio', height=height, width=width, divider=divider),
+        dict(type='ResizeWithKeepAspectRatio', height=height, width=width,   divider=divider),
         dict(type='Normalize', mean=(0., 0., 0.), std=(1., 1., 1.)),
         dict(type='ToTensorV2')
     ])
@@ -92,6 +92,7 @@ train_dataset_cfg = dict(
     mode='train',
     dataset_dir='/home/ivan/MLTasks/Datasets/coco',
     debug=False
+
 )
 
 val_dataset_cfg = dict(

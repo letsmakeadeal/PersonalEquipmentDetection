@@ -44,12 +44,17 @@ class CocoDataset(Dataset):
         return imgs_idx_result
 
     def _prepare_bboxes_after_transforms(self,
-                                         bboxes: List):
+                                         bboxes: List,
+                                         images_width: int,
+                                         images_height: int):
         output_bboxes = []
         for bbox in bboxes:
             if (bbox[1] < 0 and bbox[3] < 0) or \
                     (bbox[0] < 0 and bbox[2] < 0):
                 continue
+            bbox[0::2] = np.clip(bbox[0::2], 0, images_width)
+            bbox[1::2] = np.clip(bbox[1::2], 0, images_height)
+
             output_bboxes.append([bbox[0], bbox[1], bbox[2], bbox[3],
                                   self._class_id_plain_idx[bbox[4]]])
 
@@ -101,8 +106,10 @@ class CocoDataset(Dataset):
             cv2.imshow('debug', image_copy_debug)
             cv2.waitKey(0)
 
-        image_anno_dict['bboxes'] = self._prepare_bboxes_after_transforms(image_anno_dict['bboxes'])
-
+        image_anno_dict['bboxes'] = self._prepare_bboxes_after_transforms(
+                                                    bboxes=image_anno_dict['bboxes'],
+                                                    images_width=image_anno_dict['image_width'],
+                                                    images_height=image_anno_dict['image_height'])
         return image_anno_dict
 
     def __len__(self):
