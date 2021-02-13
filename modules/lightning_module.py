@@ -57,6 +57,17 @@ class LightningEquipmentDetNet(pl.LightningModule):
             if self.train_stage == 'transfer_learning':
                 loaded_dict = {k: v for k, v in loaded_dict.items()
                                if 'backbone' in k}
+
+                for param in self.backbone.parameters():
+                    param.requires_grad = False
+
+                for name, module in self.named_modules():
+                    if 'backbone' in name and \
+                        (isinstance(module, torch.nn.modules.BatchNorm1d) or
+                         isinstance(module, torch.nn.modules.BatchNorm2d) or
+                         isinstance(module, torch.nn.modules.BatchNorm3d)):
+                        module.eval()
+
             self.load_state_dict(loaded_dict, strict=False)
 
     def _build_models(self):

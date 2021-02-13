@@ -4,9 +4,7 @@ from typing import Optional, Sequence
 import torch
 import torch.nn as nn
 
-from ..builder import BACKBONES
 from mmcv.cnn import build_activation_layer
-from mmdet.models.backbones.base_backbone import BaseBackbone, filter_by_out_idices
 
 __all__ = ['VoVNet27Slim', 'VoVNet39', 'VoVNet57']
 
@@ -123,7 +121,7 @@ class _OSA_stage(nn.Sequential):
                                         identity=True))
 
 
-class VoVNetBase(BaseBackbone):
+class VoVNetBase(nn.Module):
     def __init__(self,
                  config_stage_ch,
                  config_concat_ch,
@@ -131,9 +129,9 @@ class VoVNetBase(BaseBackbone):
                  layer_per_block,
                  activation: dict,
                  out_indices: Optional[Sequence[int]] = (1, 2, 3, 4)):
-        super(VoVNetBase, self).__init__(out_indices)
-
+        super().__init__()
         # Stem module
+        self._out_indices = out_indices
         stem = conv3x3(3, 64, 'stem', '1', stride=2, activation=activation)
         stem += conv3x3(64, 64, 'stem', '2', stride=1, activation=activation)
         stem += conv3x3(64, 128, 'stem', '3', stride=2, activation=activation)
@@ -155,7 +153,6 @@ class VoVNetBase(BaseBackbone):
                                        activation))
         self._initialize_weights()
 
-    @filter_by_out_idices
     def forward(self, x):
         skips = []
         x = self.stem(x)
@@ -174,7 +171,6 @@ class VoVNetBase(BaseBackbone):
                 nn.init.constant_(m.bias, 0)
 
 
-@BACKBONES.register_module()
 class VoVNet57(VoVNetBase):
     r"""Constructs a VoVNet-57 model as described in
     `"An Energy and GPU-Computation Efficient Backbone Networks"
@@ -193,7 +189,6 @@ class VoVNet57(VoVNetBase):
             out_indices=out_indices)
 
 
-@BACKBONES.register_module()
 class VoVNet39(VoVNetBase):
     r"""Constructs a VoVNet-39 model as described in
     `"An Energy and GPU-Computation Efficient Backbone Networks"
@@ -212,7 +207,6 @@ class VoVNet39(VoVNetBase):
             out_indices=out_indices)
 
 
-@BACKBONES.register_module()
 class VoVNet27Slim(VoVNetBase):
     r"""Constructs a VoVNet-39 model as described in
     `"An Energy and GPU-Computation Efficient Backbone Networks"
