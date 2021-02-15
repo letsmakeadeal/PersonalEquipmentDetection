@@ -129,6 +129,12 @@ def build_optimizer_from_cfg(params, config):
     except ImportError:
         pass
 
+    try:
+        import nn_constructor.custom_optimizers as opts
+        modules.append(opts)
+    except ImportError:
+        pass
+
     config['params'] = params
     return _base_transform_from_cfg(config, modules)
 

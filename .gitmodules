@@ -5,3 +5,6 @@
 [submodule "third_party_repositories/Object_Detection_Metrics"]
 	path = third_party_repositories/Object_Detection_Metrics
 	url = https://github.com/rafaelpadilla/Object-Detection-Metrics
+[submodule "third_party_repositories/AdasOptimizer"]
+	path = third_party_repositories/AdasOptimizer
+	url = https://github.com/YanaiEliyahu/AdasOptimizer.git
