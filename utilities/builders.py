@@ -7,6 +7,7 @@ import pytorch_lightning.callbacks as LightningCallbacks
 
 import torch.optim as OptimizerLib
 import torch.optim.lr_scheduler as LRSchedulerLib
+import torch_optimizer as OptimSecondLib
 
 import pipeline.datasets as Datasets
 import pipeline.losses as Losses
@@ -110,7 +111,7 @@ def build_metric_from_cfg(config):
 
 
 def build_optimizer_from_cfg(params, config):
-    modules = [OptimizerLib]
+    modules = [OptimizerLib, OptimSecondLib]
     try:
         import adabelief_pytorch
         modules.append(adabelief_pytorch)
